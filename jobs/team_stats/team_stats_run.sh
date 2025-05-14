@@ -1,6 +1,14 @@
+# === ENVIRONMENT SWITCH ===
+ENV=${RUN_ENV:-local}
+
 # === CONFIGURATION ===
-INPUT=/user/baseball/raw/mock_data.jl      # HDFS input path
-OUTPUT=/user/baseball/processed/mock_data  # HDFS output path
+
+if [ "$ENV" = "local" ]; then       # Path to input in HDFS, either local mock data or HDFS with consumed data
+  INPUT="/user/baseball/raw/mock_data.jl" 
+else
+  INPUT="/user/kbo/ingested/"
+fi   
+OUTPUT=/user/baseball/processed/team_data  # HDFS output path
 
 # === CLEAN UP OLD OUTPUT IF EXISTS ===
 hdfs dfs -rm -r -f $OUTPUT
