@@ -1,0 +1,26 @@
+# Python virtual environments
+.venv/
+venv/
+
+# Hadoop logs and temp files
+logs/
+*.log
+tmp/
+hadoop-cluster/
+
+# OS and IDE junk
+.DS_Store
+*.swp
+*.swo
+__pycache__/
+*.pyc
+
+# Backup files
+*~
+*.bak
+
+# Environment variables
+.env
+
+# Processed data
+processed_examples/
