@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # === ENVIRONMENT SWITCH ===
 ENV=${RUN_ENV:-local}
 
