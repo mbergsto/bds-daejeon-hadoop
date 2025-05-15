@@ -11,13 +11,47 @@ This project runs MapReduce jobs to process KBO game data (JSON Lines) using Had
 hdfs --daemon start namenode
 hdfs --daemon start datanode
 
-# Activate environment
+# Activate environment, decides if you want to use consumed data or mock data
 source .env
 
-# Upload (or overwrite) mock data to HDFS
+# Run Consumer to consume kbo_game_data
+cd kafka
+python3 consumer.py
+
+# Or upload (or overwrite) mock data to HDFS
 hdfs dfs -mkdir -p /user/baseball/raw
 hdfs dfs -put -f ~/kbo-project/mock_data/mock_data.jl /user/baseball/raw/
 ```
+
+---
+
+## View HDFS Consumed Data
+
+The Kafka consumer writes messages to HDFS using the following structure:
+
+```
+/user/baseball/raw/ingested/
+├── 20250514.jl
+├── 20250515.jl
+...
+```
+
+Each file contains one JSON object per line (JSON Lines format), representing a single baseball game.
+
+To view the files in HDFS:
+
+```bash
+# List all ingested files
+hdfs dfs -ls /user/baseball/raw/ingested/
+
+# View contents of a specific day's data
+hdfs dfs -cat /user/baseball/raw/ingested/20250515.jl
+
+# Count number of games ingested on a given day
+hdfs dfs -cat /user/baseball/raw/ingested/20250515.jl | wc -l
+```
+
+This data is used as input for downstream Hadoop streaming jobs like team or pitcher statistics.
 
 ---
 
@@ -33,6 +67,7 @@ Each `run_*.sh`:
 
 - Deletes old output
 - Runs mapper + reducer with Hadoop Streaming
+- Runs on all files in the `/user/baseball/raw/ingested/` directory
 
 ---
 
@@ -48,8 +83,16 @@ hdfs dfs -cat /user/baseball/processed/batter_stats/part-00000
 
 ```
 /user/baseball/
-├── raw/          ← Input (e.g., mock_data.jl)
-└── processed/    ← Output folders per job (e.g., batter_stats, pitcher_stats)
+├── raw/
+│   ├── mock_data.jl              ← Local development input
+│   └── ingested/                 ← Live ingested data from Kafka
+│       ├── 20250514.jl
+│       └── 20250515.jl
+└── processed/
+    ├── batter_stats/            ← Output from batter stats MapReduce job
+    ├── pitcher_stats/           ← Output from pitcher stats MapReduce job
+    └── team_data/               ← Output from team stats MapReduce job
+
 ```
 
 ---

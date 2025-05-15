@@ -26,7 +26,7 @@ consumer.subscribe([topic])
 
 # === File/HDFS config ===
 local_tmp = "/tmp/kbo_buffer.jl"  # Temporary local buffer file
-hdfs_base = "/user/kbo/ingested"  # HDFS target directory
+hdfs_base = "/user/baseball/raw/ingested"  # HDFS target directory
 
 try:
     os.makedirs("/tmp", exist_ok=True)  # Ensure /tmp directory exists

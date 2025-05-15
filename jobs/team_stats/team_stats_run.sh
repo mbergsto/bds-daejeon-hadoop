@@ -6,7 +6,7 @@ ENV=${RUN_ENV:-local}
 if [ "$ENV" = "local" ]; then       # Path to input in HDFS, either local mock data or HDFS with consumed data
   INPUT="/user/baseball/raw/mock_data.jl" 
 else
-  INPUT="/user/kbo/ingested/"
+  INPUT="/user/baseball/raw/ingested"
 fi   
 OUTPUT=/user/baseball/processed/team_data  # HDFS output path
 
