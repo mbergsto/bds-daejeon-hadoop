@@ -15,6 +15,7 @@ hdfs --daemon start datanode
 source .env
 
 # Run Consumer to consume kbo_game_data
+hdfs dfs -mkdir -p /user/baseball/raw/ingested
 cd kafka
 python3 consumer.py
 
@@ -73,9 +74,20 @@ Each `run_*.sh`:
 
 ## View Output
 
+After running a Hadoop streaming job, the results are stored in HDFS under a processed/ subdirectory.
+
+For example, to view the output of the batter statistics job:
+
 ```bash
+# List output files
+hdfs dfs -ls /user/baseball/processed/batter_stats
+
+# View contents of the output (typically part-00000)
 hdfs dfs -cat /user/baseball/processed/batter_stats/part-00000
+
 ```
+
+Each line represents a processed output from the reducer script
 
 ---
 
