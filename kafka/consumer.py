@@ -4,6 +4,11 @@ import logging
 from datetime import datetime
 from confluent_kafka import Consumer, KafkaException
 import subprocess
+import time
+
+os.environ["RUN_ENV"] = "prod" # Set environment variable for Hadoop jobs
+
+TRIGGER_HADOOP_JOBS = True  # Set to True to trigger Hadoop jobs after a quiet period
 
 # === Configure logging ===
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -28,51 +33,67 @@ consumer.subscribe([topic])
 local_tmp = "/tmp/kbo_buffer.jl"  # Temporary local buffer file
 hdfs_base = "/user/baseball/raw/ingested"  # HDFS target directory
 
+has_run_hadoop = False # Flag to check if Hadoop jobs have run
+
 try:
     os.makedirs("/tmp", exist_ok=True)  # Ensure /tmp directory exists
     open(local_tmp, 'w').close()  # Clear buffer file at start
-
+    
+    last_message_time = time.time()  # Initialize last message time
+    quiet_period = 30  # Time (in seconds) to wait before triggering Hadoop jobs after last message
+    
     logging.info("Starting Kafka consumer...")
     while True:
-        msg = consumer.poll(timeout=1.0)  # Poll Kafka for new message
-        if msg is None:
-            continue  # No message received
-        if msg.error():
-            raise KafkaException(msg.error())  # Handle message error
+        msg = consumer.poll(timeout=1.0)  # Poll for new Kafka messages
 
-        try:
-            # Parse the Kafka message payload as JSON
-            data = json.loads(msg.value().decode('utf-8').replace("'", '"'))
-            # Log game info
-            game_id = data.get("game_id", "UNKNOWN")
-            logging.info(f"Processing game_id: {game_id}")
+        if msg is not None:
+            last_message_time = time.time()  # Update last message time
+            has_run_hadoop = False  # Reset flag when a message is received
 
-            # Append the message to the local temp file
-            with open(local_tmp, 'a') as f:
-                json.dump(data, f, ensure_ascii=False)
-                f.write('\n')
+            if msg.error():
+                raise KafkaException(msg.error())  # Raise exception if message has error
 
-            # Generate today's date for HDFS file path
-            today = datetime.now().strftime("%Y%m%d")
-            hdfs_target = f"{hdfs_base}/{today}.jl"
+            try:
+                # Parse the Kafka message as JSON
+                data = json.loads(msg.value().decode('utf-8').replace("'", '"'))
+                game_id = data.get("game_id", "UNKNOWN")
+                logging.info(f"Processing game_id: {game_id}")
 
-            # If file does not exist, create it
-            if subprocess.run(["hdfs", "dfs", "-test", "-e", hdfs_target]).returncode != 0:
-                subprocess.run(["hdfs", "dfs", "-touchz", hdfs_target], check=True)
+                # Append the message to the local buffer file
+                with open(local_tmp, 'a') as f:
+                    json.dump(data, f, ensure_ascii=False)
+                    f.write('\n')
 
-            # Append temp file to HDFS file
-            subprocess.run([
-                "hdfs", "dfs", "-appendToFile", local_tmp, hdfs_target
-            ], check=True)
+                # Prepare HDFS target path based on today's date
+                today = datetime.now().strftime("%Y%m%d")
+                hdfs_target = f"{hdfs_base}/{today}.jl"
 
-            # Clear the buffer file after uploading to HDFS
-            open(local_tmp, 'w').close()
+                # Create the HDFS file if it does not exist
+                if subprocess.run(["hdfs", "dfs", "-test", "-e", hdfs_target]).returncode != 0:
+                    subprocess.run(["hdfs", "dfs", "-touchz", hdfs_target], check=True)
 
-            logging.info(f"Wrote to HDFS: {hdfs_target}")
+                # Append the local buffer file to the HDFS file
+                subprocess.run(["hdfs", "dfs", "-appendToFile", local_tmp, hdfs_target], check=True)
+                open(local_tmp, 'w').close()  # Clear the local buffer file
 
-        except Exception as e:
-            # Handle JSON parsing or HDFS command errors
-            logging.error(f"Failed to process message: {e}")
+                logging.info(f"Wrote to HDFS: {hdfs_target}")
+
+            except Exception as e:
+                logging.error(f"Failed to process message: {e}")
+
+        # If no new messages for 'quiet_period', trigger Hadoop jobs (once per quiet period)
+        if TRIGGER_HADOOP_JOBS and not has_run_hadoop and time.time() - last_message_time > quiet_period:
+            logging.info("No new messages. Triggering Hadoop jobs...")
+            try:
+                # Run Hadoop job scripts for batter, pitcher, and team stats
+                subprocess.run(["bash", "../jobs/batter_stats/batter_stats_run.sh"], check=True)
+                subprocess.run(["bash", "../jobs/pitcher_stats/pitcher_stats_run.sh"], check=True)
+                subprocess.run(["bash", "../jobs/team_stats/team_stats_run.sh"], check=True)
+                has_run_hadoop = True  # Set flag to indicate Hadoop jobs have run
+                logging.info("All Hadoop jobs completed successfully.")
+            except subprocess.CalledProcessError as e:
+                logging.error(f"Failed to run one or more Hadoop jobs: {e}")
 
 finally:
+    logging.info("Closing consumer...")
     consumer.close()  # Ensure consumer is closed properly on exit

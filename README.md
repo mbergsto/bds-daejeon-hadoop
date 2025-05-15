@@ -29,6 +29,7 @@ hdfs dfs -put -f ~/kbo-project/mock_data/mock_data.jl /user/baseball/raw/
 ## View HDFS Consumed Data
 
 The Kafka consumer writes messages to HDFS using the following structure:
+The file name is based on the date it was ingested, formatted as `YYYYMMDD.jl`. For example, if the data was ingested on May 15, 2025, the file would be named `20250515.jl`.
 
 ```
 /user/baseball/raw/ingested/
@@ -108,9 +109,3 @@ Each line represents a processed output from the reducer script
 ```
 
 ---
-
-## List All Files in HDFS
-
-```bash
-hdfs dfs -ls -R /
-```
