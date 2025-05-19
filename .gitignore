@@ -27,3 +27,6 @@ processed_examples/
 
 # Mock data
 mock_data/
+
+# Test output
+test_output/
