@@ -8,7 +8,7 @@ if [ "$ENV" = "local" ]; then       # Path to input in HDFS, either local mock d
 else
   INPUT="/user/baseball/raw/ingested"
 fi   
-OUTPUT=/user/baseball/processed/team_data  # HDFS output path
+OUTPUT=/user/baseball/processed/team_stats  # HDFS output path
 
 # === CLEAN UP OLD OUTPUT IF EXISTS ===
 hdfs dfs -rm -r -f $OUTPUT

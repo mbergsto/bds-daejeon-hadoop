@@ -14,7 +14,8 @@ TRIGGER_HADOOP_JOBS = True  # Set to True to trigger Hadoop jobs after a quiet p
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # === Kafka setup ===
-bootstrap =  "172.21.229.182"  # Get Kafka broker address
+#bootstrap =  "172.21.229.182"  # Get Kafka broker address on Raspberry Pi 1
+bootstrap = "localhost:9092"  # Local Kafka broker for testing
 group_id = "kbo-consumer-group"  # Kafka consumer group ID
 topic = "kbo_game_data"  # Kafka topic to subscribe to
 
@@ -89,6 +90,10 @@ try:
                 subprocess.run(["bash", "../jobs/batter_stats/batter_stats_run.sh"], check=True)
                 subprocess.run(["bash", "../jobs/pitcher_stats/pitcher_stats_run.sh"], check=True)
                 subprocess.run(["bash", "../jobs/team_stats/team_stats_run.sh"], check=True)
+                
+                # After Hadoop jobs, run the producer script to process the data
+                # subprocess.run(["python3", "producer.py"], check=True)
+
                 has_run_hadoop = True  # Set flag to indicate Hadoop jobs have run
                 logging.info("All Hadoop jobs completed successfully.")
             except subprocess.CalledProcessError as e:
