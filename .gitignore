@@ -24,3 +24,6 @@ __pycache__/
 
 # Processed data
 processed_examples/
+
+# Mock data
+mock_data/
