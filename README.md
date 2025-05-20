@@ -4,12 +4,26 @@ This project runs MapReduce jobs to process KBO game data (JSON Lines) using Had
 
 ---
 
-## Setup
+## Setup with PI 2 and PI 3
 
 ```bash
-# Start Hadoop (if not already running)
-hdfs --daemon start namenode
+
+# Log into the correct user
+ssh hduser@<pi3-ip>
+
+# or
+su - hduser
+
+# Format and start HDFS on PI 3 (namenode)
+hdfs namenode -format # Only first time to initialize!
+start-dfs.sh
+
+# Start datanode on PI 2
+ssh hduser@<pi2-ip>
 hdfs --daemon start datanode
+
+# Go to the Hadoop project directory on PI 3
+cd ~/bds-daejeon-hadoop
 
 # Activate environment, decides if you want to use consumed data or mock data
 source .env
@@ -21,7 +35,7 @@ python3 consumer.py
 
 # Or upload (or overwrite) mock data to HDFS
 hdfs dfs -mkdir -p /user/baseball/raw
-hdfs dfs -put -f ~/kbo-project/mock_data/mock_data.jl /user/baseball/raw/
+hdfs dfs -put -f ~/path-to/mock_data/mock_data.jl /user/baseball/raw/
 ```
 
 ---
@@ -104,7 +118,7 @@ Each line represents a processed output from the reducer script
 └── processed/
     ├── batter_stats/            ← Output from batter stats MapReduce job
     ├── pitcher_stats/           ← Output from pitcher stats MapReduce job
-    └── team_data/               ← Output from team stats MapReduce job
+    └── team_stats/              ← Output from team stats MapReduce job
 
 ```
 

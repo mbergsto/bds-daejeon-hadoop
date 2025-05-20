@@ -5,8 +5,8 @@ from confluent_kafka import Producer
 
 # Set up Kafka Producer
 producer = Producer({
-    #'bootstrap.servers': '172.21.229.182',  # Raspberry Pi 1 IP
-    'bootstrap.servers': 'localhost:9092',  # Local Kafka broker for testing
+    'bootstrap.servers': '172.21.229.182',  # Raspberry Pi 1 IP
+    #'bootstrap.servers': 'localhost:9092',  # Local Kafka broker for testing
     'client.id': 'hadoop-producer'
 })
 

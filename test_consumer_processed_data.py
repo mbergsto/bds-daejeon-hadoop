@@ -8,7 +8,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 # Kafka config 
 conf = {
-    'bootstrap.servers': 'localhost:9092',  # Local Kafka broker for testing
+    'bootstrap.servers':  "172.21.229.182",  # Get Kafka broker address on Raspberry Pi 1
+    #'bootstrap.servers': 'localhost:9092',  # Local Kafka broker for testing
     'group.id': 'test-processed-group',
     'auto.offset.reset': 'earliest'
 }

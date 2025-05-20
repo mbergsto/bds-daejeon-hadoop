@@ -9,13 +9,14 @@ import time
 os.environ["RUN_ENV"] = "prod" # Set environment variable for Hadoop jobs
 
 TRIGGER_HADOOP_JOBS = True  # Set to True to trigger Hadoop jobs after a quiet period
+TRIGGER_PRODUCER = True  # Set to True to trigger the producer script after Hadoop jobs
 
 # === Configure logging ===
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # === Kafka setup ===
-#bootstrap =  "172.21.229.182"  # Get Kafka broker address on Raspberry Pi 1
-bootstrap = "localhost:9092"  # Local Kafka broker for testing
+bootstrap =  "172.21.229.182"  # Get Kafka broker address on Raspberry Pi 1
+#bootstrap = "localhost:9092"  # Local Kafka broker for testing
 group_id = "kbo-consumer-group"  # Kafka consumer group ID
 topic = "kbo_game_data"  # Kafka topic to subscribe to
 
@@ -42,6 +43,7 @@ try:
     
     last_message_time = time.time()  # Initialize last message time
     quiet_period = 30  # Time (in seconds) to wait before triggering Hadoop jobs after last message
+    has_received_message = False  # Flag to check if any message has been received
     
     logging.info("Starting Kafka consumer...")
     while True:
@@ -50,6 +52,7 @@ try:
         if msg is not None:
             last_message_time = time.time()  # Update last message time
             has_run_hadoop = False  # Reset flag when a message is received
+            has_received_message = True  # Set flag to indicate a message has been received
 
             if msg.error():
                 raise KafkaException(msg.error())  # Raise exception if message has error
@@ -83,7 +86,7 @@ try:
                 logging.error(f"Failed to process message: {e}")
 
         # If no new messages for 'quiet_period', trigger Hadoop jobs (once per quiet period)
-        if TRIGGER_HADOOP_JOBS and not has_run_hadoop and time.time() - last_message_time > quiet_period:
+        if TRIGGER_HADOOP_JOBS and has_received_message and not has_run_hadoop and time.time() - last_message_time > quiet_period:
             logging.info("No new messages. Triggering Hadoop jobs...")
             try:
                 # Run Hadoop job scripts for batter, pitcher, and team stats
@@ -92,7 +95,10 @@ try:
                 subprocess.run(["bash", "../jobs/team_stats/team_stats_run.sh"], check=True)
                 
                 # After Hadoop jobs, run the producer script to process the data
-                # subprocess.run(["python3", "producer.py"], check=True)
+                if TRIGGER_PRODUCER:
+                    logging.info("Triggering producer script...")
+                    # Run the producer script
+                    subprocess.run(["python3", "producer.py"], check=True)
 
                 has_run_hadoop = True  # Set flag to indicate Hadoop jobs have run
                 logging.info("All Hadoop jobs completed successfully.")
