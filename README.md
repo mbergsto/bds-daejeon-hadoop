@@ -75,8 +75,8 @@ This data is used as input for downstream Hadoop streaming jobs like team or pit
 
 ```bash
 cd jobs/batter_stats
-chmod +x run_batter_stats.sh
-bash run_batter_stats.sh
+chmod +x batter_stats_run.sh
+bash batter_stats_run.sh
 ```
 
 Each `run_*.sh`:
