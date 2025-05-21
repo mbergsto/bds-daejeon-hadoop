@@ -27,11 +27,14 @@ for line in sys.stdin:
 
     score_diff[team] += diff
 
-for team in sorted(wins.keys() | losses.keys() | draws.keys()):
-    print(json.dumps({
-        "team": team,
-        "wins": wins[team],
-        "losses": losses[team],
-        "draws": draws[team],
-        "score_difference": score_diff[team]
-    }))
+for team in sorted(wins.keys() | losses.keys() | draws.keys() | score_diff.keys()):
+    print(f"{team}\tWins:{wins[team]} Losses:{losses[team]} Draws:{draws[team]} ScoreDiff:{score_diff[team]}")
+
+# for team in sorted(wins.keys() | losses.keys() | draws.keys()):
+#     print(json.dumps({
+#         "team": team,
+#         "wins": wins[team],
+#         "losses": losses[team],
+#         "draws": draws[team],
+#         "score_difference": score_diff[team]
+#     }))

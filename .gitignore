@@ -24,3 +24,20 @@ __pycache__/
 
 # Processed data
 processed_examples/
+
+# Mock data
+mock_data/
+
+# Test output
+test_output/
+
+# Ignore mapper and reducer files inside kafka/
+kafka/batter_stats_mapper.py
+kafka/batter_stats_reducer.py
+kafka/pitcher_stats_mapper.py
+kafka/pitcher_stats_reducer.py
+kafka/team_stats_mapper.py
+kafka/team_stats_reducer.py
+
+# Ignore test output files
+test_output/
