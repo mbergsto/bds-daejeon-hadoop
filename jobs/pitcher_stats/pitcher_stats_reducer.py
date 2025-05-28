@@ -22,7 +22,16 @@ for line in sys.stdin:
             WHIP = ((total_bb + total_h) / total_ip) if total_ip > 0 else 0
             K9 = (total_so / total_ip * 9) if total_ip > 0 else 0
             BB9 = (total_bb / total_ip * 9) if total_ip > 0 else 0
-            print(f"{player}\t{team}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
+            outs = total_ip * 3
+            form_score = (
+                40
+                + (2 * outs)
+                + (1 * total_so)
+                - (2 * total_bb)
+                - (2 * total_h)
+                - (3 * total_er)
+            )
+            print(f"{player}\t{team}\tFormScore:{form_score:.1f}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
         current_key = key
         total_ip = total_er = total_bb = total_h = total_so = 0.0
 
@@ -39,4 +48,13 @@ if current_key:
     WHIP = ((total_bb + total_h) / total_ip) if total_ip > 0 else 0
     K9 = (total_so / total_ip * 9) if total_ip > 0 else 0
     BB9 = (total_bb / total_ip * 9) if total_ip > 0 else 0
-    print(f"{player}\t{team}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
+    outs = total_ip * 3
+    form_score = (
+        40
+        + (2 * outs)
+        + (1 * total_so)
+        - (2 * total_bb)
+        - (2 * total_h)
+        - (3 * total_er)
+        )
+    print(f"{player}\t{team}\tFormScore:{form_score:.1f}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
