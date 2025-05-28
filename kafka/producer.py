@@ -42,7 +42,7 @@ for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
         "player_name": player,
         "batting_average": float(stats.get("AVG", 0)),
         "on_base_percentage": float(stats.get("OBP", 0)),
-        "form_score": None
+        "form_score":  float(stats.get("FormScore", 0))
     })
 
 # Parse pitcher stats and group by team
@@ -60,7 +60,7 @@ for line in read_hdfs_file('/user/baseball/processed/pitcher_stats/part-*'):
         "whip": float(stats.get("WHIP", 0)),
         "k_per_9": float(stats.get("K/9", 0)),
         "bb_per_9": float(stats.get("BB/9", 0)),
-        "form_score": None
+        "form_score":  float(stats.get("FormScore", 0))
     })
 
 # Combine all stats per team and send to Kafka
