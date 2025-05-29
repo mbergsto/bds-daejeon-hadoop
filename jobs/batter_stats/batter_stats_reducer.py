@@ -22,7 +22,7 @@ for line in sys.stdin:
             avg = total_h / total_ab if total_ab > 0 else 0
             outs = total_ab - total_h
             form_score = (
-                40
+                50
                 + total_h
                 + total_bb
                 + 2 * ((total_ab + total_bb) // 4)
@@ -43,7 +43,7 @@ if current_key:
     avg = total_h / total_ab if total_ab > 0 else 0
     outs = total_ab - total_h
     form_score = (
-        40
+        50
         + total_h
         + total_bb
         + 2 * ((total_ab + total_bb) // 4)
