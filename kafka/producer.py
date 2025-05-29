@@ -1,25 +1,33 @@
 import json
 import subprocess
+import logging
 from collections import defaultdict
 from confluent_kafka import Producer
 import mariadb
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+import pytz
 
-load_dotenv()  # Load environment variables from .env file if needed
+# === Setup logging ===
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+# === Load environment and determine settings ===
+load_dotenv()
 DB_CONNECTION = os.getenv("DB_CONNECTION")
 is_local = DB_CONNECTION == "local"
 
 KAFKA_BOOTSTRAP_SERVER = os.getenv("KAFKA_BOOTSTRAP_SERVER")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_OUT") 
+KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_OUT")
 
-# Set up Kafka Producer
+# === Kafka Setup ===
 producer = Producer({
-    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVER, 
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVER,
     'client.id': 'hadoop-producer'
 })
+logging.info(f"Kafka producer initialized for topic '{KAFKA_TOPIC}'.")
 
+# === MariaDB Setup ===
 db_config = {
     "user": os.getenv("DB_LOCAL_USER") if is_local else os.getenv("DB_REMOTE_USER"),
     "password": os.getenv("DB_LOCAL_PASSWORD") if is_local else os.getenv("DB_REMOTE_PASSWORD"),
@@ -28,32 +36,36 @@ db_config = {
     "database": os.getenv("DB_LOCAL_NAME") if is_local else os.getenv("DB_REMOTE_NAME")
 }
 
-conn = mariadb.connect(**db_config)
-cursor = conn.cursor()
-
+try:
+    conn = mariadb.connect(**db_config)
+    cursor = conn.cursor()
+    logging.info("Connected to MariaDB.")
+except mariadb.Error as e:
+    logging.error(f"Failed to connect to MariaDB: {e}")
+    raise
 
 def upsert_team_data(team_name, json_data):
+    korea_time = datetime.now(pytz.timezone("Asia/Seoul")).replace(tzinfo=None)
     query = """
-        INSERT INTO processed_team_stats (team_name, snapshot)
-        VALUES (?, ?)
+        INSERT INTO processed_team_stats (team_name, snapshot, updated_at)
+        VALUES (?, ?, ?)
         ON DUPLICATE KEY UPDATE snapshot = VALUES(snapshot)
+        , updated_at = VALUES(updated_at)
     """
-    cursor.execute(query, (team_name, json_data))
+    cursor.execute(query, (team_name, json_data, korea_time))
 
-# Utility function to read lines from HDFS file
 def read_hdfs_file(path):
     result = subprocess.run(['hdfs', 'dfs', '-cat', path], capture_output=True, text=True)
     return result.stdout.strip().splitlines()
 
 def calculate_team_form_score(batters, pitchers):
-    # Calculate form score for batters
     total_batter_form = sum(batter['form_score'] for batter in batters)
-    # Calculate form score for pitchers
     total_pitcher_form = sum(pitcher['form_score'] for pitcher in pitchers)
-    # Combine scores (and round to 2 decimal places)
     return round((total_batter_form + total_pitcher_form) / (len(batters) + len(pitchers)), 2) if (len(batters) + len(pitchers)) > 0 else 0.0
 
-# Parse team stats from HDFS
+# === Read and Process Data ===
+logging.info("Reading processed stats from HDFS...")
+
 team_stats = {}
 for line in read_hdfs_file('/user/baseball/processed/team_stats/part-*'):
     parts = line.strip().split("\t")
@@ -68,7 +80,6 @@ for line in read_hdfs_file('/user/baseball/processed/team_stats/part-*'):
         "score_difference": int(stats.get("ScoreDiff", 0))
     }
 
-# Parse batter stats and group by team
 batters_by_team = defaultdict(list)
 for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
     parts = line.strip().split("\t")
@@ -83,7 +94,6 @@ for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
         "form_score":  float(stats.get("FormScore", 0))
     })
 
-# Parse pitcher stats and group by team
 pitchers_by_team = defaultdict(list)
 for line in read_hdfs_file('/user/baseball/processed/pitcher_stats/part-*'):
     parts = line.strip().split("\t")
@@ -101,7 +111,7 @@ for line in read_hdfs_file('/user/baseball/processed/pitcher_stats/part-*'):
         "form_score":  float(stats.get("FormScore", 0))
     })
 
-# Combine all stats per team and send to Kafka
+logging.info("Publishing team data to Kafka and MariaDB...")
 for team in team_stats:
     team_form_score = calculate_team_form_score(
         batters_by_team.get(team, []),
@@ -116,13 +126,14 @@ for team in team_stats:
     }
     try:
         value = json.dumps(team_data)
-        producer.produce("processed_team_stats", key=team, value=value) # Produce to Kafka topic
-        upsert_team_data(team, value) # Upsert into database
+        producer.produce(KAFKA_TOPIC, key=team, value=value)
+        upsert_team_data(team, value)
+        logging.info(f"Published data for team '{team}'.")
     except Exception as e:
-        print(f"Failed to produce message for team {team}: {e}")
+        logging.error(f"Failed to process team {team}: {e}")
 
-#producer.flush()  # Ensure all messages are sent
-conn.commit()  # Commit the database transaction
+producer.flush()
+conn.commit()
 cursor.close()
-conn.close()  # Close the database connection
-print("All team data produced to Kafka, and DB updated successfully.")
+conn.close()
+logging.info("Producer finished. All data committed and connections closed.")
