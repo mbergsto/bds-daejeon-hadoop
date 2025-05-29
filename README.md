@@ -65,6 +65,9 @@ hdfs dfs -cat /user/baseball/raw/ingested/20250515.jl
 
 # Count number of games ingested on a given day
 hdfs dfs -cat /user/baseball/raw/ingested/20250515.jl | wc -l
+
+# Delete old ingested data (if needed)
+hdfs dfs -rm '/user/baseball/raw/ingested/*'
 ```
 
 This data is used as input for downstream Hadoop streaming jobs like team or pitcher statistics.

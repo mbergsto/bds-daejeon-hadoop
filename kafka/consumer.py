@@ -42,7 +42,7 @@ try:
     open(local_tmp, 'w').close()  # Clear buffer file at start
     
     last_message_time = time.time()  # Initialize last message time
-    quiet_period = 30  # Time (in seconds) to wait before triggering Hadoop jobs after last message
+    quiet_period = 90  # Time (in seconds) to wait before triggering Hadoop jobs after last message
     has_received_message = False  # Flag to check if any message has been received
     
     logging.info("Starting Kafka consumer...")

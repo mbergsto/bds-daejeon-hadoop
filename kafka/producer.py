@@ -15,6 +15,14 @@ def read_hdfs_file(path):
     result = subprocess.run(['hdfs', 'dfs', '-cat', path], capture_output=True, text=True)
     return result.stdout.strip().splitlines()
 
+def calculate_team_form_score(batters, pitchers):
+    # Calculate form score for batters
+    total_batter_form = sum(batter['form_score'] for batter in batters)
+    # Calculate form score for pitchers
+    total_pitcher_form = sum(pitcher['form_score'] for pitcher in pitchers)
+    # Combine scores (and round to 2 decimal places)
+    return round((total_batter_form + total_pitcher_form) / (len(batters) + len(pitchers)), 2) if (len(batters) + len(pitchers)) > 0 else 0.0
+
 # Parse team stats from HDFS
 team_stats = {}
 for line in read_hdfs_file('/user/baseball/processed/team_stats/part-*'):
@@ -42,7 +50,7 @@ for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
         "player_name": player,
         "batting_average": float(stats.get("AVG", 0)),
         "on_base_percentage": float(stats.get("OBP", 0)),
-        "form_score": None
+        "form_score":  float(stats.get("FormScore", 0))
     })
 
 # Parse pitcher stats and group by team
@@ -60,16 +68,21 @@ for line in read_hdfs_file('/user/baseball/processed/pitcher_stats/part-*'):
         "whip": float(stats.get("WHIP", 0)),
         "k_per_9": float(stats.get("K/9", 0)),
         "bb_per_9": float(stats.get("BB/9", 0)),
-        "form_score": None
+        "form_score":  float(stats.get("FormScore", 0))
     })
 
 # Combine all stats per team and send to Kafka
 for team in team_stats:
+    team_form_score = calculate_team_form_score(
+        batters_by_team.get(team, []),
+        pitchers_by_team.get(team, [])
+    )
     team_data = {
         "team_name": team,
+        "team_form_score": team_form_score,
         "team_stats": team_stats[team],
         "batters": batters_by_team.get(team, []),
-        "pitchers": pitchers_by_team.get(team, [])
+        "pitchers": pitchers_by_team.get(team, []),
     }
     try:
         value = json.dumps(team_data)
