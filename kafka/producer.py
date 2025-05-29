@@ -83,15 +83,17 @@ for line in read_hdfs_file('/user/baseball/processed/team_stats/part-*'):
 batters_by_team = defaultdict(list)
 for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
     parts = line.strip().split("\t")
-    if len(parts) != 3:
+    if len(parts) != 4:
         continue
-    player, team, stats_str = parts
-    stats = dict(s.split(":") for s in stats_str.split())
+    player = parts[0]
+    form_score = float(parts[1].split(":")[1])
+    team = parts[2]
+    stats = dict(s.split(":") for s in parts[3].split())
     batters_by_team[team].append({
         "player_name": player,
         "batting_average": float(stats.get("AVG", 0)),
         "on_base_percentage": float(stats.get("OBP", 0)),
-        "form_score":  float(stats.get("FormScore", 0))
+        "form_score":  form_score,
     })
 
 pitchers_by_team = defaultdict(list)
