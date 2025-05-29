@@ -1,1 +1,5 @@
 confluent-kafka==2.10.0
+dotenv==0.9.9
+mariadb==1.1.12
+packaging==25.0
+python-dotenv==1.1.0

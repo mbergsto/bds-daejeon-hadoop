@@ -2,13 +2,43 @@ import json
 import subprocess
 from collections import defaultdict
 from confluent_kafka import Producer
+import mariadb
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Load environment variables from .env file if needed
+
+DB_CONNECTION = os.getenv("DB_CONNECTION")
+is_local = DB_CONNECTION == "local"
+
+KAFKA_BOOTSTRAP_SERVER = os.getenv("KAFKA_BOOTSTRAP_SERVER")
+KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_OUT") 
 
 # Set up Kafka Producer
 producer = Producer({
-    'bootstrap.servers': '172.21.229.182',  # Raspberry Pi 1 IP
-    #'bootstrap.servers': 'localhost:9092',  # Local Kafka broker for testing
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVER, 
     'client.id': 'hadoop-producer'
 })
+
+db_config = {
+    "user": os.getenv("DB_LOCAL_USER") if is_local else os.getenv("DB_REMOTE_USER"),
+    "password": os.getenv("DB_LOCAL_PASSWORD") if is_local else os.getenv("DB_REMOTE_PASSWORD"),
+    "host": os.getenv("DB_LOCAL_HOST") if is_local else os.getenv("DB_REMOTE_HOST"),
+    "port": int(os.getenv("DB_LOCAL_PORT") if is_local else os.getenv("DB_REMOTE_PORT")),
+    "database": os.getenv("DB_LOCAL_NAME") if is_local else os.getenv("DB_REMOTE_NAME")
+}
+
+conn = mariadb.connect(**db_config)
+cursor = conn.cursor()
+
+
+def upsert_team_data(team_name, json_data):
+    query = """
+        INSERT INTO processed_team_stats (team_name, snapshot)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE snapshot = VALUES(snapshot)
+    """
+    cursor.execute(query, (team_name, json_data))
 
 # Utility function to read lines from HDFS file
 def read_hdfs_file(path):
@@ -86,9 +116,13 @@ for team in team_stats:
     }
     try:
         value = json.dumps(team_data)
-        producer.produce("processed_team_stats", key=team, value=value)
+        producer.produce("processed_team_stats", key=team, value=value) # Produce to Kafka topic
+        upsert_team_data(team, value) # Upsert into database
     except Exception as e:
         print(f"Failed to produce message for team {team}: {e}")
 
-producer.flush()  # Ensure all messages are sent
-print("All team data produced to Kafka.")
+#producer.flush()  # Ensure all messages are sent
+conn.commit()  # Commit the database transaction
+cursor.close()
+conn.close()  # Close the database connection
+print("All team data produced to Kafka, and DB updated successfully.")
