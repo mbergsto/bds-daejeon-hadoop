@@ -4,6 +4,36 @@ This project runs MapReduce jobs to process KBO game data (JSON Lines) using Had
 
 ---
 
+## Create .env File
+
+Create a `.env` file in the project root directory to configure your environment. This file will be used to set up the necessary environment variables for running the project.
+
+```bash
+export RUN_ENV=prod  # local (mock) or prod data to use for hadoop jobs
+
+DB_CONNECTION=local  # local or remote database connection
+
+KAFKA_BOOTSTRAP_SERVER=172.21.229.182
+KAFKA_TOPIC_IN=kbo_game_data
+KAFKA_TOPIC_OUT=processed_team_stats
+
+# Remote DB
+DB_REMOTE_USER=bigdata
+DB_REMOTE_PASSWORD=bigdata+
+DB_REMOTE_HOST=192.168.1.102
+DB_REMOTE_PORT=3306
+DB_REMOTE_NAME=scraping_db
+
+# Local DB
+DB_LOCAL_USER=bigdata
+DB_LOCAL_PASSWORD=bigdata+
+DB_LOCAL_HOST=127.0.0.1
+DB_LOCAL_PORT=3307
+DB_LOCAL_NAME=scraping_local
+```
+
+---
+
 ## Setup with PI 2 and PI 3
 
 ```bash

@@ -49,4 +49,6 @@ if current_key:
         + 2 * ((total_ab + total_bb) // 4)
         - outs
         )
-    print(f"{player}\t{team}\tAVG:{avg:.3f} OBP:{obp:.3f}")
+    print(f"{player}\tFormScore:{form_score:.1f}\t{team}\tAVG:{avg:.3f} OBP:{obp:.3f}")
+
+
