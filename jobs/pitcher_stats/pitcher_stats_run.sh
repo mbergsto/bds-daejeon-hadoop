@@ -24,7 +24,10 @@ hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar \
   -mapper "python3 $SCRIPT_DIR/pitcher_stats_mapper.py" \
   -reducer "python3 $SCRIPT_DIR/pitcher_stats_reducer.py" \
   -file $SCRIPT_DIR/pitcher_stats_mapper.py \
-  -file $SCRIPT_DIR/pitcher_stats_reducer.py
+  -file $SCRIPT_DIR/pitcher_stats_reducer.py \
+  -jobconf stream.num.map.output.key.fields=2 \
+  -partitioner org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner \
+  -jobconf mapred.text.key.partitioner.options=-k1,2
   # -mapper "python3 pitcher_stats_mapper.py" \
   # -reducer "python3 pitcher_stats_reducer.py" \
   # -file pitcher_stats_mapper.py \

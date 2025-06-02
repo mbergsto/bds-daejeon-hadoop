@@ -8,8 +8,11 @@ for line in sys.stdin:
     parts = line.strip().split("\t")
     if len(parts) != 3:
         continue
+    
+    player_name, team_name, values = parts
 
-    key = f"{parts[0]}\t{parts[1]}"  # team_name \t player_name
+    #key = f"{parts[0]}\t{parts[1]}"  # team_name \t player_name
+    key = f"{player_name}\t{team_name}"
     try:
         ip, er, bb, h, so = map(float, parts[2].split(","))
     except:
