@@ -91,9 +91,9 @@ for line in read_hdfs_file('/user/baseball/processed/batter_stats/part-*'):
     stats = dict(s.split(":") for s in parts[3].split())
     batters_by_team[team].append({
         "player_name": player,
-        "batting_average": float(stats.get("AVG", 0)),
-        "on_base_percentage": float(stats.get("OBP", 0)),
-        "form_score":  form_score,
+        "batting_average": round(float(stats.get("AVG", 0)),2),
+        "on_base_percentage": round(float(stats.get("OBP", 0)),2),
+        "form_score":  round(form_score, 2),
     })
 
 pitchers_by_team = defaultdict(list)
@@ -106,11 +106,11 @@ for line in read_hdfs_file('/user/baseball/processed/pitcher_stats/part-*'):
     stats = dict(s.split(":") for s in parts[2:])
     pitchers_by_team[team].append({
         "player_name": player,
-        "era": float(stats.get("ERA", 0)),
-        "whip": float(stats.get("WHIP", 0)),
-        "k_per_9": float(stats.get("K/9", 0)),
-        "bb_per_9": float(stats.get("BB/9", 0)),
-        "form_score":  float(stats.get("FormScore", 0))
+        "era": round(float(stats.get("ERA", 0)),2),
+        "whip": round(float(stats.get("WHIP", 0)),2),
+        "k_per_9": round(float(stats.get("K/9", 0)),2),
+        "bb_per_9": round(float(stats.get("BB/9", 0)),2),
+        "form_score":  round(float(stats.get("FormScore", 0)),2)
     })
 
 logging.info("Publishing team data to Kafka and MariaDB...")
@@ -139,3 +139,4 @@ conn.commit()
 cursor.close()
 conn.close()
 logging.info("Producer finished. All data committed and connections closed.")
+

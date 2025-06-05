@@ -27,6 +27,7 @@ processed_examples/
 
 # Mock data
 mock_data/
+*.jl
 
 # Test output
 test_output/
@@ -41,3 +42,4 @@ kafka/team_stats_reducer.py
 
 # Ignore test output files
 test_output/
+

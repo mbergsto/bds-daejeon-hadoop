@@ -14,7 +14,10 @@ for line in sys.stdin:
                 H = player.get("hits", 0)
                 BB = player.get("walks", 0)
                 AB = player.get("at_bats", 0)
-                print(f"{name}\t{team_name}\t{AB},{H},{BB}")
+                R = player.get("runs", 0)
+                SO = player.get("strikeouts", 0)
+                HR = player.get("home_runs", 0)
+                print(f"{name}\t{team_name}\t{AB},{H},{BB},{R},{SO},{HR}")
     except:
         continue
 
