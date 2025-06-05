@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import sys
-global_score_sum = 0.0
-global_num_pitchers = 0
-
 
 current_key = None
 total_ip = total_er = total_bb = total_h = total_so = num_games = form_score_sum = 0.0
@@ -39,8 +36,6 @@ for line in sys.stdin:
             BB9 = (total_bb / total_ip * 9) if total_ip > 0 else 0
             avg_form = form_score_sum / num_games if num_games > 0 else 0
             print(f"{player}\t{team}\tFormScore:{avg_form:.1f}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
-            global_score_sum += avg_form
-            global_num_pitchers += 1
         current_key = key
         total_ip = total_er = total_bb = total_h = total_so = num_games = form_score_sum = 0.0
 
@@ -61,11 +56,4 @@ if current_key:
     BB9 = (total_bb / total_ip * 9) if total_ip > 0 else 0
     avg_form = form_score_sum / num_games if num_games > 0 else 0
     print(f"{player}\t{team}\tFormScore:{avg_form:.1f}\tERA:{ERA:.2f}\tWHIP:{WHIP:.2f}\tK/9:{K9:.2f}\tBB/9:{BB9:.2f}")
-    global_score_sum += avg_form
-    global_num_pitchers += 1
 
-
-
-if global_num_pitchers > 0:
-    global_avg = global_score_sum / global_num_pitchers
-    print(f"\nGLOBAL average pitcher form score: {global_avg:.2f}")

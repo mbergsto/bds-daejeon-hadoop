@@ -11,7 +11,7 @@ Create a `.env` file in the project root directory to configure your environment
 ```bash
 export RUN_ENV=prod  # local (mock) or prod data to use for hadoop jobs
 
-DB_CONNECTION=local  # local or remote database connection
+DB_CONNECTION=remote  # local or remote database connection
 
 KAFKA_BOOTSTRAP_SERVER=172.21.229.182
 KAFKA_TOPIC_IN=kbo_game_data
