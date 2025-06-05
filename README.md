@@ -44,6 +44,9 @@ ssh hduser@<pi3-ip>
 # or
 su - hduser
 
+# On both PI 2 and PI 3, run
+source ~/.zshrc
+
 # Format and start HDFS on PI 3 (namenode)
 hdfs namenode -format # Only first time to initialize!
 start-dfs.sh
@@ -69,6 +72,14 @@ hdfs dfs -put -f ~/path-to/mock_data/mock_data.jl /user/baseball/raw/
 ```
 
 ---
+
+## Check HDFS Status in Browser
+
+You can check the status of HDFS by accessing the Namenode web interface. Open your web browser and go to:
+
+```
+http://<pi3-ip>:9870
+```
 
 ## View HDFS Consumed Data
 
