@@ -27,7 +27,7 @@ processed_examples/
 
 # Mock data
 mock_data/
-*.jl
+
 
 # Test output
 test_output/
